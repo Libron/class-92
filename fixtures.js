@@ -14,7 +14,7 @@ const getRndInteger = (min, max) => {
 const generateRandomMessages = (users) => {
     const messages = [];
     users.map(user => {
-        const numberOfTracks = getRndInteger(10, 15);
+        const numberOfTracks = getRndInteger(1, 3);
         for (let i = 0; i < numberOfTracks; i++) {
             messages.push({
                 text: loremIpsum(),

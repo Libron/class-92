@@ -60,6 +60,7 @@ const chat = async (ws, req) => {
                         text: decodedMessage.text
                     }
                 });
+                console.log('i m heere');
 
                 break;
             default:
