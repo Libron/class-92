@@ -5,6 +5,7 @@ const config = require('./config');
 const cors = require('cors');
 
 const users = require('./app/users');
+const messages = require('./app/messages');
 const chat = require('./app/chat');
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.static('public'));
 
 mongoose.connect(config.dbUrl, config.mongoOptions).then(() => {
     app.use('/users', users);
+    app.use('/messages', messages);
     app.ws('/chat', chat);
 
     app.listen(config.port, () => {

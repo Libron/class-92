@@ -3,6 +3,21 @@ const User = require('../models/User');
 
 const activeConnections = {};
 
+const getActiveUsernames = connections => {
+    return Object.keys(connections).map(connId => {
+        const conn = connections[connId];
+        return conn.user.displayname;
+    });
+};
+
+const sendTo = (connections, msg) => {
+    Object.keys(connections).map(connId => {
+        const conn = connections[connId];
+        conn.ws.send(JSON.stringify(msg));
+    });
+};
+
+
 const chat = async (ws, req) => {
     const token = req.query.token;
 
@@ -17,28 +32,16 @@ const chat = async (ws, req) => {
     }
 
     const id = nanoid();
-    console.log('client connected! id=', id);
+    console.log(`client ${user.displayname} connected! with ${id}`);
     activeConnections[id] = {user, ws};
 
-    const displaynames = Object.keys(activeConnections).map(connId => {
-       const conn = activeConnections[connId];
-
-       return conn.user.displayname;
+    sendTo(activeConnections, {
+        type: 'NEW_USER',
+        displayname: user.displayname,
+        activeUsers: getActiveUsernames(activeConnections)
     });
-
-    Object.keys(activeConnections).map(connId => {
-       const conn = activeConnections[connId];
-
-       conn.ws.send(JSON.stringify({
-           type: 'NEW_USER',
-           displayname: user.username
-       }))
-    });
-
-    let username = '';
 
     ws.on('message', msg => {
-
         let decodedMessage;
 
         try {
@@ -48,32 +51,26 @@ const chat = async (ws, req) => {
         }
 
         switch (decodedMessage.type) {
-            case 'SET_USERNAME':    // {type: 'SET_USERNAME', username: 'John Doe'}
-                username = decodedMessage.username;
-                break;
             case 'CREATE_MESSAGE':   // {type: 'CREATE_MESSAGE', text: 'Hello'}
                 // {type: 'NEW_MESSAGE', text: 'Hello'}
-
-                Object.keys(activeConnections).forEach(connId => {
-                    const conn = activeConnections[connId];
-                    conn.send(JSON.stringify({
-                        type: 'NEW_MESSAGE',
-                        mesage: {
-                            username,
-                            text: decodedMessage.text
-                        }
-                    }));
+                sendTo(activeConnections, {
+                    type: 'NEW_MESSAGE',
+                    message: {
+                        displayname: user.displayname,
+                        text: decodedMessage.text
+                    }
                 });
+
                 break;
             default:
                 console.log('Not valid message', decodedMessage.type);
         }
     });
 
-    ws.on('close', msg => {
-        console.log('client disconnected! id=', id);
-        delete activeConnections[id];
-    });
+    // ws.on('close', msg => {
+    //     delete activeConnections[id];
+    //     ws.send();
+    // });
 };
 
 module.exports = chat;
