@@ -49,7 +49,7 @@ const run = async () => {
             username: 'gena',
             password: '123',
             displayname: 'Gena Kunjutov',
-            image: 'ava2.jpg',
+            image: 'ava3.jpg',
             role: 'moderator',
             token: nanoid()
         },
@@ -57,7 +57,7 @@ const run = async () => {
             username: 'irina',
             password: '123',
             displayname: 'Irina Kuzmina',
-            image: 'ava3.jpg',
+            image: 'ava2.jpg',
             role: 'user',
             token: nanoid()
         }
