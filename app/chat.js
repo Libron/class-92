@@ -1,5 +1,6 @@
 const nanoid = require('nanoid');
 const User = require('../models/User');
+const Message = require('../models/Message');
 
 const activeConnections = {};
 
@@ -41,7 +42,7 @@ const chat = async (ws, req) => {
         activeUsers: getActiveUsernames(activeConnections)
     });
 
-    ws.on('message', msg => {
+    ws.on('message', async msg => {
         let decodedMessage;
 
         try {
@@ -53,25 +54,29 @@ const chat = async (ws, req) => {
         switch (decodedMessage.type) {
             case 'CREATE_MESSAGE':   // {type: 'CREATE_MESSAGE', text: 'Hello'}
                 // {type: 'NEW_MESSAGE', text: 'Hello'}
-                sendTo(activeConnections, {
-                    type: 'NEW_MESSAGE',
-                    message: {
-                        displayname: user.displayname,
-                        text: decodedMessage.text
-                    }
-                });
-                console.log('i m heere');
+                let message = new Message({text: decodedMessage.text, user: user._id});
+                try {
+                    const result = await message.save();
+                    message = await Message.findById(result._id).populate('user');
 
+                    sendTo(activeConnections, {
+                        type: 'NEW_MESSAGE',
+                        message
+                        }
+                    );
+                } catch (e) {
+                    console.log('Error');
+                }
                 break;
             default:
                 console.log('Not valid message', decodedMessage.type);
         }
     });
 
-    // ws.on('close', msg => {
-    //     delete activeConnections[id];
-    //     ws.send();
-    // });
+    ws.on('close', msg => {
+        delete activeConnections[id];
+        console.log(`client ${user.displayname} disconnected! with ${id}`)
+    });
 };
 
 module.exports = chat;
