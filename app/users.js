@@ -36,4 +36,23 @@ router.post('/sessions', async (req, res) => {
     res.send({message: "Login successful", user});
 });
 
+router.delete('/session', async (req, res) => {
+    const token = req.get('Authorization');
+    const success = {message: 'Logget out'};
+
+    if (!token) {
+        return res.send(success);
+    }
+    const user = await User.findOne({token});
+
+    if (!user) {
+        return res.send(success);
+    }
+
+    user.generateToken();
+    await  user.save();
+
+    return res.send(success);
+});
+
 module.exports = router;

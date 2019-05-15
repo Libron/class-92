@@ -74,7 +74,13 @@ const chat = async (ws, req) => {
     });
 
     ws.on('close', msg => {
+        const displayname = user.displayname;
         delete activeConnections[id];
+        sendTo(activeConnections, {
+            type: 'USER_LEFT',
+            displayname,
+            activeUsers: getActiveUsernames(activeConnections)
+        });
         console.log(`client ${user.displayname} disconnected! with ${id}`)
     });
 };
